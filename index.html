@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>泡奶水溫混合計算器</title>
+    <style>
+        :root {
+            --primary: #4A90E2;
+            --success: #2ECC71;
+            --warning: #F5A623;
+            --danger: #E74C3C;
+            --bg: #F4F6F8;
+            --card: #FFFFFF;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        .container {
+            max-width: 480px;
+            margin: 0 auto;
+            background: var(--card);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        h1 {
+            font-size: 1.25rem;
+            text-align: center;
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+        .section-title {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        .input-group {
+            margin-bottom: 16px;
+        }
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+        input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+        .row {
+            display: flex;
+            gap: 12px;
+        }
+        .col {
+            flex: 1;
+        }
+        .mode-switch {
+            background: #f0f0f0;
+            padding: 4px;
+            border-radius: 8px;
+            display: flex;
+            margin-bottom: 20px;
+        }
+        .mode-btn {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        .mode-btn.active {
+            background: #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            font-weight: bold;
+            color: var(--primary);
+        }
+        .quick-chips {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+        .chip {
+            padding: 6px 12px;
+            background: #eef2f7;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: var(--primary);
+            cursor: pointer;
+        }
+        button.calc-btn {
+            width: 100%;
+            padding: 16px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        #result-card {
+            margin-top: 24px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border: 1px solid #e9ecef;
+            display: none;
+        }
+        .result-main {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .water-block {
+            text-align: center;
+            flex: 1;
+        }
+        .water-val {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+        .water-label {
+            font-size: 0.8rem;
+            color: #666;
+        }
+        .plus {
+            font-size: 1.2rem;
+            color: #999;
+            margin: 0 10px;
+        }
+        .steps {
+            font-size: 0.9rem;
+            line-height: 1.6;
+            color: #444;
+        }
+        .steps li {
+            margin-bottom: 6px;
+        }
+        .disclaimer {
+            margin-top: 30px;
+            font-size: 0.75rem;
+            color: #999;
+            text-align: center;
+            line-height: 1.4;
+        }
+        .mode-desc {
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: -15px;
+            margin-bottom: 15px;
+            padding: 0 5px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🍼 泡奶水溫計算器</h1>
+
+    <div class="mode-switch">
+        <div class="mode-btn active" onclick="setMode('A')">模式 A (安全)</div>
+        <div class="mode-btn" onclick="setMode('B')">模式 B (快速)</div>
+    </div>
+    <div id="mode-desc" class="mode-desc">
+        ⚠️ 建議模式：混合至 70°C 殺菌，再冷卻至餵食溫度。
+    </div>
+
+    <div class="section-title">目標設定</div>
+    <div class="row">
+        <div class="col input-group">
+            <label>總水量 (ml)</label>
+            <input type="number" id="targetVol" value="180">
+            <div class="quick-chips">
+                <span class="chip" onclick="setVal('targetVol', 120)">120</span>
+                <span class="chip" onclick="setVal('targetVol', 150)">150</span>
+                <span class="chip" onclick="setVal('targetVol', 180)">180</span>
+            </div>
+        </div>
+        <div class="col input-group">
+            <label>餵食溫度 (°C)</label>
+            <input type="number" id="targetTemp" value="45">
+            <div class="quick-chips">
+                <span class="chip" onclick="setVal('targetTemp', 40)">40</span>
+                <span class="chip" onclick="setVal('targetTemp', 45)">45</span>
+                <span class="chip" onclick="setVal('targetTemp', 50)">50</span>
+            </div>
+        </div>
+    </div>
+
+    <hr style="border:0; border-top:1px solid #eee; margin: 10px 0 20px;">
+
+    <div class="section-title">飲水機溫度 (可手動修改)</div>
+    <div class="row">
+        <div class="col input-group">
+            <label>熱水 🔥</label>
+            <input type="number" id="tempHot" value="98">
+        </div>
+        <div class="col input-group">
+            <label>溫水 ☀️</label>
+            <input type="number" id="tempWarm" value="60">
+        </div>
+        <div class="col input-group">
+            <label>冷水 ❄️</label>
+            <input type="number" id="tempCold" value="20">
+        </div>
+    </div>
+
+    <button class="calc-btn" onclick="calculate()">開始計算</button>
+
+    <div id="result-card">
+        <div class="section-title" style="text-align:center; color: var(--primary)">建議配方</div>
+        <div class="result-main">
+            <div class="water-block">
+                <div class="water-val" id="res-vol1">0</div>
+                <div class="water-label" id="res-name1">熱水</div>
+                <div class="water-label" style="font-size:0.7rem" id="res-temp1">(98°C)</div>
+            </div>
+            <div class="plus">+</div>
+            <div class="water-block">
+                <div class="water-val" id="res-vol2">0</div>
+                <div class="water-label" id="res-name2">冷水</div>
+                <div class="water-label" style="font-size:0.7rem" id="res-temp2">(20°C)</div>
+            </div>
+        </div>
+        <div style="text-align:center; margin-bottom:15px; font-weight:bold; color:#555">
+            混合後約：<span id="final-temp-display">--</span>°C
+        </div>
+        <div class="section-title">操作步驟</div>
+        <ol class="steps" id="step-list">
+            </ol>
+    </div>
+
+    <div class="disclaimer">
+        免責聲明：本工具僅進行物理熱平衡計算，不代表醫療建議。請務必依奶粉罐指示確認濃度，並在餵食前滴在手腕內側確認溫度 [cite: 8, 28]。
+    </div>
+</div>
+
+<script>
+    let currentMode = 'A'; // A=Safety, B=Direct
+
+    function setVal(id, val) {
+        document.getElementById(id).value = val;
+    }
+
+    function setMode(mode) {
+        currentMode = mode;
+        const btns = document.querySelectorAll('.mode-btn');
+        btns.forEach(b => b.classList.remove('active'));
+        // 簡單透過文字內容找按鈕加樣式 (或依點擊事件處理)
+        if(mode === 'A') btns[0].classList.add('active');
+        else btns[1].classList.add('active');
+        
+        const desc = document.getElementById('mode-desc');
+        if (mode === 'A') {
+            desc.innerHTML = '⚠️ 建議模式：混合至 <strong>70°C</strong> 殺菌，再冷卻至餵食溫度。';
+        } else {
+            desc.innerHTML = '⚡ 快速模式：直接混合至目標溫度（適合確認水源安全時使用）。';
+        }
+    }
+
+    // 新增：10ml 取整函數
+    function roundToStep(value, step = 10) {
+        return Math.round(value / step) * step;
+    }
+
+    function calculate() {
+        // 1. 獲取輸入
+        const Vt = parseFloat(document.getElementById('targetVol').value);
+        const feedTemp = parseFloat(document.getElementById('targetTemp').value);
+        
+        const Th = parseFloat(document.getElementById('tempHot').value);
+        const Tw = parseFloat(document.getElementById('tempWarm').value);
+        const Tc = parseFloat(document.getElementById('tempCold').value);
+
+        // 2. 決定計算目標溫度 (Tt)
+        let Tt = (currentMode === 'A') ? 70 : feedTemp;
+        if (currentMode === 'A' && feedTemp > 70) Tt = feedTemp;
+
+        // 3. 尋找最佳兩水源組合
+        const sources = [
+            { name: "熱水", temp: Th },
+            { name: "溫水", temp: Tw },
+            { name: "冷水", temp: Tc }
+        ];
+
+        if (Tt > Th || Tt < Tc) {
+            alert("目標溫度無法達成：超出水源溫度範圍");
+            return;
+        }
+
+        let s1, s2;
+        // 優先順序：熱+溫 -> 溫+冷 -> 熱+冷
+        if (Tt <= Th && Tt >= Tw) {
+            s1 = sources[0]; s2 = sources[1];
+        } else if (Tt < Tw && Tt >= Tc) {
+            s1 = sources[1]; s2 = sources[2];
+        } else {
+            s1 = sources[0]; s2 = sources[2];
+        }
+
+        // 4. 熱平衡公式 (理想值)
+        // V1_ideal = Vt * (Tt - T2) / (T1 - T2)
+        let v1_ideal = Vt * (Tt - s2.temp) / (s1.temp - s2.temp);
+
+        // 5. 【關鍵修改】以 10ml 為單位進行四捨五入
+        let v1 = roundToStep(v1_ideal, 10);
+        
+        // 邊界檢查：不能小於0或大於總量
+        if (v1 < 0) v1 = 0;
+        if (v1 > Vt) v1 = Vt;
+
+        let v2 = Vt - v1; // 確保總量固定為 Vt
+
+        // 6. 反推實際溫度 (因為水量被四捨五入過，溫度會有偏差)
+        // T_final = (V1*T1 + V2*T2) / Vt
+        let actualTemp = (v1 * s1.temp + v2 * s2.temp) / Vt;
+        
+        // 為了顯示美觀，實際溫度取小數點後1位
+        actualTemp = Math.round(actualTemp * 10) / 10;
+        let tempDiff = (actualTemp - Tt).toFixed(1);
+        let diffSign = tempDiff > 0 ? "+" : "";
+
+        // 7. 渲染結果
+        document.getElementById('result-card').style.display = 'block';
+        
+        // 顯示水量
+        document.getElementById('res-name1').innerText = s1.name;
+        document.getElementById('res-temp1').innerText = `(${s1.temp}°C)`;
+        document.getElementById('res-vol1').innerText = v1 + " ml";
+
+        document.getElementById('res-name2').innerText = s2.name;
+        document.getElementById('res-temp2').innerText = `(${s2.temp}°C)`;
+        document.getElementById('res-vol2').innerText = v2 + " ml";
+
+        // 顯示溫度結果與誤差
+        const tempDisplay = document.getElementById('final-temp-display');
+        tempDisplay.innerText = actualTemp;
+        
+        // 根據誤差改變顏色提示
+        const diffHtml = Math.abs(tempDiff) > 2 
+            ? `<span style="color:var(--danger); font-size:0.8rem"> (與目標差 ${diffSign}${tempDiff}°C)</span>`
+            : `<span style="color:var(--success); font-size:0.8rem"> (誤差 ${diffSign}${tempDiff}°C OK)</span>`;
+            
+        // 這裡我們直接插入一個 span 來顯示誤差
+        // 注意：需確保 HTML 中 id="final-temp-display" 的父元素結構適合
+        tempDisplay.innerHTML = `${actualTemp} <span style="font-size:1rem; color:#333">°C</span> ${diffHtml}`;
+
+        // 8. 生成步驟
+        const list = document.getElementById('step-list');
+        list.innerHTML = '';
+        
+        list.innerHTML += `<li>先倒入 <strong>${v1} ml</strong> 的${s1.name}。</li>`;
+        list.innerHTML += `<li>再加入 <strong>${v2} ml</strong> 的${s2.name}。</li>`;
+        
+        if (currentMode === 'A') {
+            list.innerHTML += `<li>加入奶粉搖勻，目前水溫約 <strong>${actualTemp}°C</strong> (殺菌用)。</li>`;
+            list.innerHTML += `<li style="color:var(--danger)">⚠️ <strong>冷卻降溫</strong>：請降至餵食溫度 (${feedTemp}°C)。</li>`;
+        } else {
+            list.innerHTML += `<li>加入奶粉搖勻，目前水溫約 <strong>${actualTemp}°C</strong>，確認不燙口後即可餵食。</li>`;
+        }
+        
+        list.innerHTML += `<li style="font-size:0.8rem; color:#999">已將水量調整為 10ml 倍數以便使用奶瓶量測。</li>`;
+    }
+</script>
+
+</body>
+</html>
